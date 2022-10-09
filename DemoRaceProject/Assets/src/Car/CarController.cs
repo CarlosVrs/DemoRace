@@ -16,15 +16,17 @@ public class CarController : MonoBehaviour
     public float torque;
     public float brakeForze;
     public AnimationCurve torqueCurve;
-    public AnimationCurve brakeCurve;
-    [Range(-1, 1)]
-    public float accelInput;    
+    public AnimationCurve brakeCurve;    
 
     [Header("Wheels")]
     public GameObject wheelModel;
     public Vector3 frontOffset;
     public Vector3 rearOffset;
 
+    [Header("Inputs")]
+    [Range(-1, 1)]
+    public float accelInput;
+    
     private GameObject[] wheels;
 
     

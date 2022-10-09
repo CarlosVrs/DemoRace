@@ -46,15 +46,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   springStrength: 15
-  springDamper: 2
+  springDamper: 4
   springRestDistance: 0.5
-  springTravel: 0.2
+  springTravel: 0
   pos: 0
   wheelRadius: 0.4
   wheelGripFactor: 1
   frictionFactor: 1
   wheelMass: 30
   wheelTransform: {fileID: 1649055864199608534}
+  wheelVisual: {fileID: 860065223137542545}
 --- !u!1 &1873459289795016201
 GameObject:
   m_ObjectHideFlags: 0
