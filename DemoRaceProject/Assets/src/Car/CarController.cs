@@ -27,8 +27,9 @@ public class CarController : MonoBehaviour
     public Vector3 rearOffset;
 
     [Header("Inputs")]
-    [Range(-1, 1)]
     public float accelInput;
+    PlayerInput playerInput;
+    InputActionMap inputActionMap;
     
     private WheelController[] wheels;
     private RaycastHit raycastHit;
@@ -50,6 +51,9 @@ public class CarController : MonoBehaviour
 
         rb.mass = mass;
         rb.collisionDetectionMode = detectionMode;
+
+        playerInput = GetComponent<PlayerInput>();
+        inputActionMap = playerInput.actions.FindActionMap("Vehicle");
     }
 
     WheelController wheelSetup(WheelController.WheelPos pos){
@@ -119,6 +123,8 @@ public class CarController : MonoBehaviour
                 Vector3 accelDir = wheelC.wheelTransform.forward;
                 carSpeed = Vector3.Dot(wheelC.transform.forward, rb.velocity);
 
+                accelInput = inputActionMap.FindAction("Accelerate").ReadValue<float>() - inputActionMap.FindAction("Reverse/Brake").ReadValue<float>();
+
                 if(accelInput > 0.0f && carSpeed < carTopSpeed){
                     float normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / carTopSpeed);
                     float availableTorque = torqueCurve.Evaluate(normalizedSpeed) * accelInput;
@@ -147,9 +153,7 @@ public class CarController : MonoBehaviour
                 }
             }
 
-            //Visual spin speed
-            wheelC.spinSpeedFrame = (wheelC.transform.position - wheelC.posInLastFrame).magnitude;
-            wheelC.posInLastFrame = wheelC.transform.position;
+            
         }
     }
 
@@ -174,10 +178,13 @@ public class CarController : MonoBehaviour
 
             }
 
-            // Visual rotation
+            //Visual spin speed
+            wheelC.spinSpeedFrame = (wheelC.transform.position - wheelC.posInLastFrame).magnitude;
+            wheelC.posInLastFrame = wheelC.transform.position;
+            
             if(!(accelInput < 0 && carSpeed > 0)){
                 float direction = accelInput == 0 ? Mathf.Sign(carSpeed) : Mathf.Sign(accelInput);
-                float valueToRotate = wheelC.spinSpeedFrame / (2 * Mathf.PI * wheelC.wheelRadius) * direction;
+                float valueToRotate = wheelC.spinSpeedFrame / (2 * Mathf.PI * wheelC.wheelRadius * direction);
                 wheelC.wheelVisual.Rotate(Vector3.right, valueToRotate * 360, Space.Self);
 
             }
