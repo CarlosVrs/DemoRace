@@ -228,31 +228,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2910409713256573852, guid: 4969c5b1b0366e24086530aff8f6be99,
-        type: 3}
-      propertyPath: offsets.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2910409713256573852, guid: 4969c5b1b0366e24086530aff8f6be99,
-        type: 3}
-      propertyPath: offsets.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2910409713256573852, guid: 4969c5b1b0366e24086530aff8f6be99,
-        type: 3}
-      propertyPath: rotationSpeed
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 2960655520374070953, guid: 4969c5b1b0366e24086530aff8f6be99,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2960655520374070953, guid: 4969c5b1b0366e24086530aff8f6be99,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -4
-      objectReference: {fileID: 0}
     - target: {fileID: 7450733451606890053, guid: 4969c5b1b0366e24086530aff8f6be99,
         type: 3}
       propertyPath: m_RootOrder
@@ -310,15 +285,21 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7450733451606890072, guid: 4969c5b1b0366e24086530aff8f6be99,
         type: 3}
-      propertyPath: brakeCurve.m_Curve.Array.data[1].time
-      value: 0.5
+      propertyPath: rearOffset.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7450733451606890072, guid: 4969c5b1b0366e24086530aff8f6be99,
+        type: 3}
+      propertyPath: frontOffset.y
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7450733451606890073, guid: 4969c5b1b0366e24086530aff8f6be99,
         type: 3}
       propertyPath: m_Name
       value: Car-4w
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 5111518851580065131, guid: 4969c5b1b0366e24086530aff8f6be99, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 4969c5b1b0366e24086530aff8f6be99, type: 3}
 --- !u!1 &304500812
 GameObject:

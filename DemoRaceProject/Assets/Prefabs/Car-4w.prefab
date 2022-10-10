@@ -44,6 +44,7 @@ GameObject:
   - component: {fileID: 7450733451606890055}
   - component: {fileID: 2910409713256573852}
   - component: {fileID: 7450733451606890072}
+  - component: {fileID: 4747627497567474485}
   m_Layer: 0
   m_Name: Car-4w
   m_TagString: Untagged
@@ -112,6 +113,9 @@ MonoBehaviour:
   playerTransorm: {fileID: 0}
   camPosTarget: {fileID: 0}
   carController: {fileID: 0}
+  rotationSpeed: 100
+  offsets: {x: 0, y: 0, z: 0}
+  sideInput: 0
 --- !u!114 &7450733451606890072
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -178,7 +182,7 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.8
+      time: 0.5
       value: 0.7
       inSlope: 0.057381716
       outSlope: 0.057381716
@@ -203,6 +207,57 @@ MonoBehaviour:
   frontOffset: {x: 0.7, y: 0.1, z: 1.6}
   rearOffset: {x: 0.7, y: 0.1, z: 1.6}
   accelInput: 0
+--- !u!114 &4747627497567474485
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7450733451606890073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Actions: {fileID: -944628639613478452, guid: 2ec87dece61eb2e449ae27c5f2e18044,
+    type: 3}
+  m_NotificationBehavior: 2
+  m_UIInputModule: {fileID: 0}
+  m_DeviceLostEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_DeviceRegainedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ControlsChangedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ActionEvents:
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: 
+        m_MethodName: 
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 2161e113-2a07-4c8a-a22f-9bed4a5fd43d
+    m_ActionName: Vehicle/Accelerate[/XInputControllerWindows/rightTrigger]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 6605640d-1a6e-4511-9dcb-558436bb33d6
+    m_ActionName: Vehicle/Reverse/Brake[/XInputControllerWindows/leftTrigger]
+  m_NeverAutoSwitchControlSchemes: 0
+  m_DefaultControlScheme: 
+  m_DefaultActionMap: Vehicle
+  m_SplitScreenIndex: -1
+  m_Camera: {fileID: 0}
 --- !u!1 &7450733451815666168
 GameObject:
   m_ObjectHideFlags: 0
