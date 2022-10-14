@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0016c59e2f63caf4493a9af50caf664e, type: 3}
+  m_Name: WMuscle
+  m_EditorClassIdentifier: 
+  springStrength: 0.6
+  springDamper: 7
+  springRestDistance: 0.6
+  wheelMass: 12
+  wheelRadius: 0.4
+  GripCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: -0.033649124
+      outSlope: -0.033649124
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.033411354
+    - serializedVersion: 3
+      time: 0.40054077
+      value: 0.9979969
+      inSlope: Infinity
+      outSlope: -0.09509051
+      tangentMode: 7
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0.7
+      inSlope: -1.0277781
+      outSlope: -1.0277781
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.09230769
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  friction: 0.02
+  frictionFactor: 1
+  frontOffset: {x: 0.7, y: 0.1, z: 1.6}
+  rearOffset: {x: 0.7, y: 0.1, z: 1.6}
+  maxTurnRadius: 50
+  turnRadiusCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4

@@ -1,40 +1,46 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class CameraFollow : MonoBehaviour
 {
     [Header("References")]
-    public GameManager gameManager;
     public Transform playerTransorm;
-    public Transform camPosTarget;
+    public Transform camTransform;
 
     [Header("Settings")]
-    [Range(0.1f,200)]
-    public float lerpSpeed = 1;
     [Range(-2, 2)]
-    public float LookAtAngle = 0;
+    public float LookAtAngle;
+    [Range(0f, 1f)]
+    public float rotationSpeed;
     public Vector3 offsets;
+
+    [Header("Inputs")]
+    [Range(-1,1)]
+    public float sideInput;
+    PlayerInput playerInput;
+    InputActionMap inputActionMap;
     Vector3 lookAtOffset;
 
     
     void Start()
     {
-        if(gameManager == null)
-            gameManager = FindObjectOfType<GameManager>();
-        
-        if(playerTransorm == null)
-            playerTransorm = gameManager.playerController.playerTransorm;
-        
-        if(camPosTarget == null)
-            camPosTarget = gameManager.playerController.camPosTarget;
+        playerInput = playerTransorm.GetComponent<PlayerInput>();
+        inputActionMap = playerInput.actions.FindActionMap("Vehicle");
 
+        
     }
 
     void LateUpdate(){
+        sideInput = inputActionMap.FindAction("RotateCam").ReadValue<float>();
+
         lookAtOffset = playerTransorm.position;
         lookAtOffset.y += LookAtAngle;
-        transform.position = camPosTarget.position + offsets;
-        transform.LookAt(lookAtOffset);
+        transform.position = Vector3.MoveTowards(transform.position, playerTransorm.position, rotationSpeed / Time.deltaTime);
+        transform.Rotate(Vector3.up, sideInput * (rotationSpeed / Time.deltaTime), Space.Self);
+
+        camTransform.LookAt(lookAtOffset, Vector3.up);
+        camTransform.localPosition = offsets;
     }
 }

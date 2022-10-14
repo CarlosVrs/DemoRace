@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
@@ -17,6 +18,8 @@ public class PlayerController : MonoBehaviour
     [Header("Inputs")]
     [Range(-1,1)]
     public float sideInput;
+    PlayerInput playerInput;
+    InputActionMap inputActionMap;
     void Start()
     {
         if(playerTransorm == null)
@@ -27,10 +30,15 @@ public class PlayerController : MonoBehaviour
 
         if(carController == null)
             carController = gameObject.GetComponent<CarController>();
+
+        playerInput = GetComponent<PlayerInput>();
+        inputActionMap = playerInput.actions.FindActionMap("Vehicle");
     }
 
     void LateUpdate(){
+        sideInput = inputActionMap.FindAction("RotateCam").ReadValue<float>();
+
         camPosTarget.localPosition += offsets; 
-        camPosTarget.RotateAround(playerTransorm.position, Vector3.up, sideInput * Time.deltaTime * rotationSpeed);
+        camPosTarget.RotateAround(playerTransorm.position, playerTransorm.up, sideInput * Time.deltaTime * rotationSpeed);
     }
 }

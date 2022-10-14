@@ -6,38 +6,74 @@ using UnityEngine.InputSystem;
 public class CarController : MonoBehaviour
 {
     [Header("Physics Model")]
-    public Rigidbody rb;
-    public BoxCollider col;
-    public float mass = 1000;
-    public CollisionDetectionMode detectionMode;
-
-    [Header("Car Specs")]
-    public float carTopSpeed;
-    public float carBackwardsTopSpeed;
-    public float torque;
-    public float brakeForze;
-    public AnimationCurve torqueCurve;
-    public AnimationCurve brakeCurve;
-
-    private float carSpeed;    
+    public CarRC carModel;
+    public Rigidbody rb;   
 
     [Header("Wheels")]
     public GameObject wheelModel;
-    public Vector3 frontOffset;
-    public Vector3 rearOffset;
 
     [Header("Inputs")]
     public float accelInput;
-    PlayerInput playerInput;
-    InputActionMap inputActionMap;
-    
+    public float steeringInput;
+    public float resetInput;
+
+    private PlayerInput playerInput;
+    private InputActionMap inputActionMap;
     private WheelController[] wheels;
     private RaycastHit raycastHit;
     private bool rayDidHit;
     private float offset;
-
+    private bool isGrounded;
+    private float antiRollL;
+    private float antiRollR;
+    private float carSpeed; 
+    private float wheelBase; 
+    private float rearTrack;  
+    private float akAngleL;
+    private float akAngleR;
     
-    // Start is called before the first frame update
+    WheelController wheelSetup(WheelController.WheelPos pos){
+        GameObject newWheel = Instantiate(wheelModel, transform, false);
+        WheelController wheelC = newWheel.GetComponent<WheelController>(); 
+        Transform[] visuals;
+        switch (pos)
+        {
+            case WheelController.WheelPos.FRONT_RIGHT:
+                wheelC.pos = WheelController.WheelPos.FRONT_RIGHT;
+                newWheel.transform.localPosition += carModel.frontOffset;
+
+                visuals = wheelC.wheelVisuals.GetComponentsInChildren<Transform>();
+                for (int vis = 1; vis < visuals.Length; vis++)
+                    visuals[vis].Rotate(Vector3.up * 180, Space.Self);
+
+                break;
+
+            case WheelController.WheelPos.FRONT_LEFT:
+                wheelC.pos = WheelController.WheelPos.FRONT_LEFT;
+                newWheel.transform.localPosition += carModel.frontOffset + new Vector3(-(carModel.frontOffset.x * 2f), 0, 0);
+                
+                break;
+
+            case WheelController.WheelPos.REAR_RIGHT:
+                wheelC.pos = WheelController.WheelPos.REAR_RIGHT;
+                newWheel.transform.localPosition += carModel.rearOffset + new Vector3(0, 0, -(carModel.rearOffset.z * 2));
+                
+                visuals = wheelC.wheelVisuals.GetComponentsInChildren<Transform>();                
+                for (int vis = 1; vis < visuals.Length; vis++)
+                    visuals[vis].Rotate(Vector3.up * 180, Space.Self);
+                    
+                break;
+                
+            case WheelController.WheelPos.REAR_LEFT:
+                wheelC.pos = WheelController.WheelPos.REAR_LEFT;
+                newWheel.transform.localPosition += carModel.rearOffset + new Vector3(-(carModel.rearOffset.x * 2f), 0, -(carModel.rearOffset.z * 2)); 
+
+                break;
+        }
+        
+        return wheelC;
+    }
+
     void Start()
     {
         wheels = new WheelController[4];
@@ -49,102 +85,119 @@ public class CarController : MonoBehaviour
             wheels[3] = wheelSetup(WheelController.WheelPos.REAR_RIGHT);
         }
 
-        rb.mass = mass;
-        rb.collisionDetectionMode = detectionMode;
+        rb.mass = carModel.mass;
+        rb.collisionDetectionMode = carModel.collisionDetectionMode;
+        rb.inertiaTensor = carModel.InertiaTensor * carModel.mass;
+        rb.inertiaTensorRotation = Quaternion.identity;
+        rb.centerOfMass = carModel.CenterOfMass;
+
+        wheelBase = carModel.frontOffset.z + carModel.rearOffset.z;
+        rearTrack = carModel.rearOffset.x * 2;
 
         playerInput = GetComponent<PlayerInput>();
         inputActionMap = playerInput.actions.FindActionMap("Vehicle");
     }
 
-    WheelController wheelSetup(WheelController.WheelPos pos){
-        GameObject newWheel = Instantiate(wheelModel, transform, false);
-        WheelController wheelController = newWheel.GetComponent<WheelController>(); 
-        switch (pos)
-        {
-            case WheelController.WheelPos.FRONT_RIGHT:
-                wheelController.pos = WheelController.WheelPos.FRONT_RIGHT;
-                newWheel.transform.localPosition += frontOffset; 
-                break;
-            case WheelController.WheelPos.FRONT_LEFT:
-                wheelController.pos = WheelController.WheelPos.FRONT_LEFT;
-                newWheel.transform.localPosition += frontOffset + new Vector3(-(frontOffset.x * 2f), 0, 0);
-                break;
-            case WheelController.WheelPos.REAR_RIGHT:
-                wheelController.pos = WheelController.WheelPos.REAR_RIGHT;
-                newWheel.transform.localPosition += rearOffset + new Vector3(0, 0, -(rearOffset.z * 2)); 
-                break;
-            case WheelController.WheelPos.REAR_LEFT:
-                wheelController.pos = WheelController.WheelPos.REAR_LEFT;
-                newWheel.transform.localPosition += rearOffset + new Vector3(-(rearOffset.x * 2f), 0, -(rearOffset.z * 2)); 
-                break;
-        }
-
-        return wheelController;
-    }
-
     void FixedUpdate(){
+        isGrounded = false;
         foreach (WheelController wheelC in wheels)
         {
-            rayDidHit = Physics.Raycast(wheelC.transform.position, -wheelC.transform.up, out raycastHit, wheelC.springRestDistance);
+            rayDidHit = Physics.Raycast(wheelC.springTransform.position, -wheelC.springTransform.up, out raycastHit, wheelC.model.springRestDistance + wheelC.model.wheelRadius);
+            accelInput = inputActionMap.FindAction("Accelerate").ReadValue<float>() - inputActionMap.FindAction("Reverse/Brake").ReadValue<float>();
+            isGrounded |= rayDidHit;
 
             if(rayDidHit){
-                //Suspension spring force
-                Vector3 springDir = wheelC.wheelTransform.up;
-                Vector3 tireWorldVel = rb.GetPointVelocity(wheelC.wheelTransform.position) / Time.fixedDeltaTime;
+
+                carSpeed = Vector3.Dot(wheelC.springTransform.forward, rb.velocity);
+
+                // Suspension spring force
+                Vector3 springDir = raycastHit.normal;
+                Vector3 tireWorldVel = rb.GetPointVelocity(wheelC.wheelTransform.position);
                 
-                offset = wheelC.springRestDistance - raycastHit.distance;
+                offset = wheelC.model.springRestDistance - raycastHit.distance;
 
                 float vel = Vector3.Dot(springDir, tireWorldVel);
+                float force = (offset * wheelC.model.springStrength * carModel.mass) - (vel * ((wheelC.model.springDamper * carModel.mass) / 100f));
 
-                float force = (offset * wheelC.springStrength) - (vel * wheelC.springDamper);
-
-                rb.AddForceAtPosition(springDir * force, wheelC.wheelTransform.position);
+                rb.AddForceAtPosition(springDir * (force / Time.fixedDeltaTime), wheelC.wheelTransform.position);
             
-                //Steering force
+                // Grip force
                 Vector3 steeringDir = wheelC.wheelTransform.right;
                 tireWorldVel = rb.GetPointVelocity(wheelC.wheelTransform.position);
 
+                float normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / carModel.topSpeed);
+                float availableGrip = wheelC.model.GripCurve.Evaluate(normalizedSpeed);
+                
                 float steeringVel = Vector3.Dot(steeringDir, tireWorldVel);
-                float desiredVelChange = -steeringVel * wheelC.wheelGripFactor;
+                float desiredVelChange = -steeringVel * availableGrip;
                 float desiredAccel = desiredVelChange / Time.fixedDeltaTime;
 
-                rb.AddForceAtPosition(steeringDir * wheelC.wheelMass * desiredAccel, wheelC.wheelTransform.position);
-            
-                //Friction
-                if (!(carSpeed < 0.01 && -0.01 < carSpeed)){
-                    float desiredFrictionChange = Mathf.Sign(carSpeed) * -wheelC.frictionFactor * wheelC.friction;
+                rb.AddForceAtPosition(steeringDir * wheelC.model.wheelMass * desiredAccel, wheelC.wheelTransform.position);
+
+                // Anti roll bars
+                // Front
+                if(wheelC.pos == WheelController.WheelPos.FRONT_LEFT)
+                    antiRollL = (-wheelC.springTransform.InverseTransformPoint(raycastHit.point).y ) / wheelC.model.springRestDistance;
+                
+                if(wheelC.pos == WheelController.WheelPos.FRONT_RIGHT)
+                    antiRollR = (-wheelC.springTransform.InverseTransformPoint(raycastHit.point).y ) / wheelC.model.springRestDistance;
+                
+                float availableAntirrol = carModel.antiRollCurve.Evaluate(normalizedSpeed);
+                float antiRollFrontForce = (antiRollL - antiRollR) * availableAntirrol * -carModel.antiRoll * rb.mass;
+                
+                if(wheelC.pos == WheelController.WheelPos.FRONT_RIGHT)
+                    rb.AddForceAtPosition(wheelC.springTransform.up * -antiRollFrontForce, wheelC.springTransform.position);
+
+                if( wheelC.pos == WheelController.WheelPos.FRONT_LEFT)
+                    rb.AddForceAtPosition(wheelC.springTransform.up * antiRollFrontForce, wheelC.springTransform.position);
+                
+                // Rear
+                if(wheelC.pos == WheelController.WheelPos.REAR_LEFT)
+                    antiRollL = (-wheelC.springTransform.InverseTransformPoint(raycastHit.point).y ) / wheelC.model.springRestDistance;
+                
+                if(wheelC.pos == WheelController.WheelPos.REAR_RIGHT)
+                    antiRollR = (-wheelC.springTransform.InverseTransformPoint(raycastHit.point).y ) / wheelC.model.springRestDistance;
+                
+                float antiRollRearForce = (antiRollL - antiRollR) * availableAntirrol * -carModel.antiRoll * rb.mass;
+                
+                if(wheelC.pos == WheelController.WheelPos.REAR_RIGHT)
+                    rb.AddForceAtPosition(wheelC.springTransform.up * -antiRollRearForce, wheelC.springTransform.position);
+
+                if( wheelC.pos == WheelController.WheelPos.REAR_LEFT)
+                    rb.AddForceAtPosition(wheelC.springTransform.up * antiRollRearForce, wheelC.springTransform.position);
+                    
+                // Friction
+                if (!(carSpeed < 0.05 && -0.05 < carSpeed)){
+                    float desiredFrictionChange = Mathf.Sign(carSpeed) * -wheelC.model.frictionFactor * wheelC.model.friction;
                     float desiredFrictionAccel = desiredFrictionChange / Time.fixedDeltaTime;
 
                     rb.AddForceAtPosition(wheelC.wheelTransform.forward * rb.mass * desiredFrictionAccel, wheelC.wheelTransform.position);
 
                 }
 
-                //Acceleration 
+                // Acceleration 
                 Vector3 accelDir = wheelC.wheelTransform.forward;
-                carSpeed = Vector3.Dot(wheelC.transform.forward, rb.velocity);
 
-                accelInput = inputActionMap.FindAction("Accelerate").ReadValue<float>() - inputActionMap.FindAction("Reverse/Brake").ReadValue<float>();
+                if(accelInput > 0.0f && carSpeed < carModel.topSpeed){
+                    normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / carModel.topSpeed);
+                    float availableTorque = carModel.torqueCurve.Evaluate(normalizedSpeed) * accelInput;
 
-                if(accelInput > 0.0f && carSpeed < carTopSpeed){
-                    float normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / carTopSpeed);
-                    float availableTorque = torqueCurve.Evaluate(normalizedSpeed) * accelInput;
-
-                    rb.AddForceAtPosition(accelDir * availableTorque * torque, wheelC.wheelTransform.position, ForceMode.Impulse);
+                    rb.AddForceAtPosition(accelDir * availableTorque * carModel.torque, wheelC.wheelTransform.position, ForceMode.Impulse);
                     
                 }
                 
                 // Braking and reverse
-                if(accelInput < 0.0f && carSpeed > -carBackwardsTopSpeed){
+                if(accelInput < 0.0f && carSpeed > -carModel.reverseTopSpeed){
                     // Braking
-                    float normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / carTopSpeed);
-                    float availableTorque = brakeCurve.Evaluate(normalizedSpeed) * accelInput;
-                    availableTorque *= brakeForze;     
+                    normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / carModel.topSpeed);
+                    float availableTorque = carModel.brakeCurve.Evaluate(normalizedSpeed) * accelInput;
+                    availableTorque *= carModel.brake;     
                     
-                    //Reverse
+                    // Reverse
                     if(carSpeed <= 0.0f){
-                        normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / carBackwardsTopSpeed);
-                        availableTorque = torqueCurve.Evaluate(normalizedSpeed) * accelInput;
-                        availableTorque *= torque;
+                        normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / carModel.reverseTopSpeed);
+                        availableTorque = carModel.torqueCurve.Evaluate(normalizedSpeed) * accelInput;
+                        availableTorque *= carModel.torque;
 
                     }
 
@@ -152,42 +205,83 @@ public class CarController : MonoBehaviour
                     
                 }
             }
-
-            
         }
+
+        rb.centerOfMass = isGrounded ? carModel.CenterOfMass : carModel.LowerCenterOfMass;
     }
 
     void Update(){
+        steeringInput = inputActionMap.FindAction("Steering").ReadValue<float>();
+        resetInput = inputActionMap.FindAction("Reset").ReadValue<float>();
+        
+        // Steering
+        akAngleL = akAngleR = 0;
+        float normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / carModel.topSpeed);
+        float availableTurnRadius = carModel.turnRadiusCurve.Evaluate(normalizedSpeed);
+        // Steering Right
+        if(steeringInput > 0){
+            akAngleL = Mathf.Rad2Deg * Mathf.Atan(wheelBase / ((availableTurnRadius * carModel.turnRadius) + (rearTrack / 2))) * steeringInput;
+            akAngleR = Mathf.Rad2Deg * Mathf.Atan(wheelBase / ((availableTurnRadius * carModel.turnRadius) - (rearTrack / 2))) * steeringInput;
+        }
+        // Steering Left
+        if(steeringInput < 0){
+            akAngleL = Mathf.Rad2Deg * Mathf.Atan(wheelBase / ((availableTurnRadius * carModel.turnRadius) - (rearTrack / 2))) * steeringInput;
+            akAngleR = Mathf.Rad2Deg * Mathf.Atan(wheelBase / ((availableTurnRadius * carModel.turnRadius) + (rearTrack / 2))) * steeringInput;
+        }
+
         foreach (WheelController wheelC in wheels)
         {
-            rayDidHit = Physics.Raycast(wheelC.transform.position, -wheelC.transform.up, out raycastHit, wheelC.springRestDistance);
-            //Visual suspension
+            rayDidHit = Physics.Raycast(wheelC.springTransform.position, -wheelC.springTransform.up, out raycastHit, wheelC.model.springRestDistance);
+            
+            // Akermann steering
+            if(wheelC.pos == WheelController.WheelPos.FRONT_LEFT){
+                wheelC.wheelTransform.localRotation = Quaternion.Euler(
+                    wheelC.wheelTransform.localRotation.x, 
+                    wheelC.wheelTransform.localRotation.y + akAngleL, 
+                    wheelC.wheelTransform.localRotation.z
+                );
+            }
+
+            if(wheelC.pos == WheelController.WheelPos.FRONT_RIGHT){
+                wheelC.wheelTransform.localRotation = Quaternion.Euler(
+                    wheelC.wheelTransform.localRotation.x, 
+                    wheelC.wheelTransform.localRotation.y + akAngleR, 
+                    wheelC.wheelTransform.localRotation.z
+                );
+            }
+
+            // Visual suspension
             if(rayDidHit){
-                wheelC.wheelVisual.transform.localPosition = new Vector3(
-                    wheelC.wheelVisual.transform.localPosition.x, 
-                    wheelC.wheelRadius - raycastHit.distance, 
-                    wheelC.wheelVisual.transform.localPosition.z
+                wheelC.wheelTransform.localPosition = new Vector3(
+                    wheelC.wheelTransform.localPosition.x, 
+                    wheelC.model.wheelRadius - raycastHit.distance, 
+                    wheelC.wheelTransform.localPosition.z
                 );
 
             }else{
-                wheelC.wheelVisual.transform.localPosition = new Vector3(
-                    wheelC.wheelVisual.transform.localPosition.x, 
-                    wheelC.wheelRadius - wheelC.springRestDistance, 
-                    wheelC.wheelVisual.transform.localPosition.z
+                wheelC.wheelTransform.localPosition = new Vector3(
+                    wheelC.wheelTransform.localPosition.x, 
+                    wheelC.model.wheelRadius - wheelC.model.springRestDistance, 
+                    wheelC.wheelTransform.localPosition.z
                 );
 
             }
 
-            //Visual spin speed
-            wheelC.spinSpeedFrame = (wheelC.transform.position - wheelC.posInLastFrame).magnitude;
-            wheelC.posInLastFrame = wheelC.transform.position;
+            // Visual spin speed
+            wheelC.spinSpeedFrame = (wheelC.springTransform.position - wheelC.posInLastFrame).magnitude;
+            wheelC.posInLastFrame = wheelC.springTransform.position;
             
             if(!(accelInput < 0 && carSpeed > 0)){
                 float direction = accelInput == 0 ? Mathf.Sign(carSpeed) : Mathf.Sign(accelInput);
-                float valueToRotate = wheelC.spinSpeedFrame / (2 * Mathf.PI * wheelC.wheelRadius * direction);
-                wheelC.wheelVisual.Rotate(Vector3.right, valueToRotate * 360, Space.Self);
+                float valueToRotate = wheelC.spinSpeedFrame / (2 * Mathf.PI * wheelC.model.wheelRadius * direction);
+                wheelC.wheelVisuals.Rotate(Vector3.right, valueToRotate * 360, Space.Self);
 
             }
+        }
+
+        if(resetInput == 1){
+            transform.rotation = Quaternion.identity;
+            transform.position += Vector3.up;
         }
     }
 }
