@@ -14,9 +14,10 @@ public class CarRC : ScriptableObject
     // -->
 
     [Header("Car Specs\n")]
-    [Range(15,200)]
+    [Tooltip("In m/s")]
+    [Range(15, SPEED_LIMIT)]
     public float topSpeed;
-    [Range(1,20)]
+    [Range(1, REVERSE_SPEED_LIMIT)]
     public float reverseTopSpeed;
     [Range(1, 200)]
     public float torque;
@@ -34,5 +35,10 @@ public class CarRC : ScriptableObject
     [Range(1,60)]
     public float turnRadius;
     public AnimationCurve turnRadiusCurve;
-    
+
+    // Max configurable speeds in km/s: 1 m/s -> 3.6 km/h
+    // 1 Unity unit -> 1 m 
+    public const float SPEED_LIMIT = 288;
+    public const float REVERSE_SPEED_LIMIT = 54;
+    public const float KMH_TO_MS = 3.6f;
 }

@@ -31,6 +31,7 @@ public class CarController : MonoBehaviour
     private float rearTrack;  
     private float akAngleL;
     private float akAngleR;
+    private float normalizedSpeed;
     
     WheelController wheelSetup(WheelController.WheelPos pos){
         GameObject newWheel = Instantiate(wheelModel, transform, false);
@@ -125,7 +126,7 @@ public class CarController : MonoBehaviour
                 Vector3 steeringDir = wheelC.wheelTransform.right;
                 tireWorldVel = rb.GetPointVelocity(wheelC.wheelTransform.position);
 
-                float normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / carModel.topSpeed);
+                normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / (carModel.topSpeed / CarRC.KMH_TO_MS));
                 float availableGrip = wheelC.model.GripCurve.Evaluate(normalizedSpeed);
                 
                 float steeringVel = Vector3.Dot(steeringDir, tireWorldVel);
@@ -174,12 +175,11 @@ public class CarController : MonoBehaviour
                     rb.AddForceAtPosition(wheelC.wheelTransform.forward * rb.mass * desiredFrictionAccel, wheelC.wheelTransform.position);
 
                 }
-
+                
                 // Acceleration 
                 Vector3 accelDir = wheelC.wheelTransform.forward;
 
                 if(accelInput > 0.0f && carSpeed < carModel.topSpeed){
-                    normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / carModel.topSpeed);
                     float availableTorque = carModel.torqueCurve.Evaluate(normalizedSpeed) * accelInput;
 
                     rb.AddForceAtPosition(accelDir * availableTorque * carModel.torque, wheelC.wheelTransform.position, ForceMode.Impulse);
@@ -189,14 +189,13 @@ public class CarController : MonoBehaviour
                 // Braking and reverse
                 if(accelInput < 0.0f && carSpeed > -carModel.reverseTopSpeed){
                     // Braking
-                    normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / carModel.topSpeed);
                     float availableTorque = carModel.brakeCurve.Evaluate(normalizedSpeed) * accelInput;
                     availableTorque *= carModel.brake;     
                     
                     // Reverse
                     if(carSpeed <= 0.0f){
-                        normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / carModel.reverseTopSpeed);
-                        availableTorque = carModel.torqueCurve.Evaluate(normalizedSpeed) * accelInput;
+                        float normalizedReverseSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / (carModel.reverseTopSpeed / CarRC.KMH_TO_MS));
+                        availableTorque = carModel.torqueCurve.Evaluate(normalizedReverseSpeed) * accelInput;
                         availableTorque *= carModel.torque;
 
                     }
@@ -216,7 +215,6 @@ public class CarController : MonoBehaviour
         
         // Steering
         akAngleL = akAngleR = 0;
-        float normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / carModel.topSpeed);
         float availableTurnRadius = carModel.turnRadiusCurve.Evaluate(normalizedSpeed);
         // Steering Right
         if(steeringInput > 0){

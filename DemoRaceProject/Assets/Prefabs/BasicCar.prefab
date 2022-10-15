@@ -45,7 +45,7 @@ GameObject:
   - component: {fileID: 7450733451606890072}
   - component: {fileID: 4747627497567474485}
   m_Layer: 0
-  m_Name: Car-4w
+  m_Name: BasicCar
   m_TagString: GameController
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

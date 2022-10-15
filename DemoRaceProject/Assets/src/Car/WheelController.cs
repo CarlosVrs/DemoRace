@@ -8,7 +8,7 @@ public class WheelController : MonoBehaviour
     public Transform wheelTransform;
     public Transform wheelVisuals;
 
-    [Header("Wheel")]
+    [HideInInspector]
     public WheelPos pos;
     [HideInInspector]
     public float spinSpeedFrame;

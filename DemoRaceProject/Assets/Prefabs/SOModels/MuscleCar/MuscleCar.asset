@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0d74889ff50406d428963b3557d2770c, type: 3}
-  m_Name: CMuscle
+  m_Name: MuscleCar
   m_EditorClassIdentifier: 
   mass: 1000
   collisionDetectionMode: 1
   InertiaTensor: {x: 2.16, y: 2.2, z: 0.27}
   CenterOfMass: {x: 0, y: 0.5, z: 0}
   LowerCenterOfMass: {x: 0, y: -0.5, z: 0}
-  topSpeed: 80
-  reverseTopSpeed: 15
+  topSpeed: 288
+  reverseTopSpeed: 54
   torque: 80
   torqueCurve:
     serializedVersion: 2
