@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d74889ff50406d428963b3557d2770c, type: 3}
   m_Name: CMuscle
   m_EditorClassIdentifier: 
-  InertiaTensor: {x: 2.16, y: 2.2, z: 0.27}
-  CenterOfMass: {x: 0, y: 0.5, z: 0}
-  LowerCenterOfMass: {x: 0, y: -0.1, z: 0}
   mass: 1000
   collisionDetectionMode: 1
+  InertiaTensor: {x: 2.16, y: 2.2, z: 0.27}
+  CenterOfMass: {x: 0, y: 0.5, z: 0}
+  LowerCenterOfMass: {x: 0, y: -0.5, z: 0}
   topSpeed: 80
   reverseTopSpeed: 15
   torque: 80
@@ -87,15 +87,15 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  antiRoll: 10
+  antiRoll: 70
   antiRollCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
       value: 0
-      inSlope: 0
-      outSlope: 0
+      inSlope: 2
+      outSlope: 2
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
@@ -103,8 +103,8 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 1
       value: 1
-      inSlope: 2
-      outSlope: 2
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
@@ -114,13 +114,13 @@ MonoBehaviour:
     m_RotationOrder: 4
   frontOffset: {x: 0.7, y: 0.1, z: 1.6}
   rearOffset: {x: 0.7, y: 0.1, z: 1.6}
-  maxTurnRadius: 50
+  turnRadius: 50
   turnRadiusCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 0.1
       inSlope: 0
       outSlope: 0
       tangentMode: 0

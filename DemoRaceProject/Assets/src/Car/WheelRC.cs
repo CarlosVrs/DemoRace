@@ -10,7 +10,7 @@ public class WheelRC : ScriptableObject
     public float springRestDistance;
 
     [Header("Wheel")]
-    [Range(1,25)]
+    [Range(1,200)]
     public float wheelMass;
     [Range(0.1f, 2)]
     public float wheelRadius;

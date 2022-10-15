@@ -37,7 +37,7 @@ public class CameraFollow : MonoBehaviour
 
         lookAtOffset = playerTransorm.position;
         lookAtOffset.y += LookAtAngle;
-        transform.position = Vector3.MoveTowards(transform.position, playerTransorm.position, rotationSpeed / Time.deltaTime);
+        transform.position = playerTransorm.position;
         transform.Rotate(Vector3.up, sideInput * (rotationSpeed / Time.deltaTime), Space.Self);
 
         camTransform.LookAt(lookAtOffset, Vector3.up);

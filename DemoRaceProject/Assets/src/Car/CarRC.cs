@@ -24,7 +24,7 @@ public class CarRC : ScriptableObject
     [Range(100,400)]
     public float brake;
     public AnimationCurve brakeCurve;
-    [Range(1, 20)]
+    [Range(1, 200)]
     public float antiRoll;
     public AnimationCurve antiRollCurve;
     

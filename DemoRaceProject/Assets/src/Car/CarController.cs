@@ -102,7 +102,7 @@ public class CarController : MonoBehaviour
         isGrounded = false;
         foreach (WheelController wheelC in wheels)
         {
-            rayDidHit = Physics.Raycast(wheelC.springTransform.position, -wheelC.springTransform.up, out raycastHit, wheelC.model.springRestDistance + wheelC.model.wheelRadius);
+            rayDidHit = Physics.Raycast(wheelC.springTransform.position, -wheelC.springTransform.up, out raycastHit, wheelC.model.springRestDistance);
             accelInput = inputActionMap.FindAction("Accelerate").ReadValue<float>() - inputActionMap.FindAction("Reverse/Brake").ReadValue<float>();
             isGrounded |= rayDidHit;
 
@@ -111,7 +111,7 @@ public class CarController : MonoBehaviour
                 carSpeed = Vector3.Dot(wheelC.springTransform.forward, rb.velocity);
 
                 // Suspension spring force
-                Vector3 springDir = raycastHit.normal;
+                Vector3 springDir = wheelC.springTransform.up;
                 Vector3 tireWorldVel = rb.GetPointVelocity(wheelC.wheelTransform.position);
                 
                 offset = wheelC.model.springRestDistance - raycastHit.distance;
@@ -135,6 +135,7 @@ public class CarController : MonoBehaviour
                 rb.AddForceAtPosition(steeringDir * wheelC.model.wheelMass * desiredAccel, wheelC.wheelTransform.position);
 
                 // Anti roll bars
+                float availableAntirrol = carModel.antiRollCurve.Evaluate(normalizedSpeed);
                 // Front
                 if(wheelC.pos == WheelController.WheelPos.FRONT_LEFT)
                     antiRollL = (-wheelC.springTransform.InverseTransformPoint(raycastHit.point).y ) / wheelC.model.springRestDistance;
@@ -142,14 +143,13 @@ public class CarController : MonoBehaviour
                 if(wheelC.pos == WheelController.WheelPos.FRONT_RIGHT)
                     antiRollR = (-wheelC.springTransform.InverseTransformPoint(raycastHit.point).y ) / wheelC.model.springRestDistance;
                 
-                float availableAntirrol = carModel.antiRollCurve.Evaluate(normalizedSpeed);
                 float antiRollFrontForce = (antiRollL - antiRollR) * availableAntirrol * -carModel.antiRoll * rb.mass;
                 
                 if(wheelC.pos == WheelController.WheelPos.FRONT_RIGHT)
-                    rb.AddForceAtPosition(wheelC.springTransform.up * -antiRollFrontForce, wheelC.springTransform.position);
+                    rb.AddForceAtPosition(springDir * -antiRollFrontForce, wheelC.springTransform.position);
 
                 if( wheelC.pos == WheelController.WheelPos.FRONT_LEFT)
-                    rb.AddForceAtPosition(wheelC.springTransform.up * antiRollFrontForce, wheelC.springTransform.position);
+                    rb.AddForceAtPosition(springDir * antiRollFrontForce, wheelC.springTransform.position);
                 
                 // Rear
                 if(wheelC.pos == WheelController.WheelPos.REAR_LEFT)
@@ -161,10 +161,10 @@ public class CarController : MonoBehaviour
                 float antiRollRearForce = (antiRollL - antiRollR) * availableAntirrol * -carModel.antiRoll * rb.mass;
                 
                 if(wheelC.pos == WheelController.WheelPos.REAR_RIGHT)
-                    rb.AddForceAtPosition(wheelC.springTransform.up * -antiRollRearForce, wheelC.springTransform.position);
+                    rb.AddForceAtPosition(springDir * -antiRollRearForce, wheelC.springTransform.position);
 
                 if( wheelC.pos == WheelController.WheelPos.REAR_LEFT)
-                    rb.AddForceAtPosition(wheelC.springTransform.up * antiRollRearForce, wheelC.springTransform.position);
+                    rb.AddForceAtPosition(springDir * antiRollRearForce, wheelC.springTransform.position);
                     
                 // Friction
                 if (!(carSpeed < 0.05 && -0.05 < carSpeed)){
